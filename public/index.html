@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <meta charset="utf-8">
+        <meta name="description" content="CyberChat">
+        <meta name="author" content="CyberChat">
+        <meta name="keywords" content="CyberChat">
+        <meta name="robots" content="index,follow">
+        <meta name="language" content="French">
+        <link rel="icon" href="./img/logo.png" />
+        <title>CyberChat</title>
+        <link rel="stylesheet" href="./css/style.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=swap">
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="./script.js"></script>
+    </head>
+    <body>
+        <div class="page" id="page-sign">
+            <div class="scanline"></div>
+
+            <div class="terminal glitch">
+                <p class="spinner">[/]</p>
+                <div class="hydra">
+                    <div class="hydra_rebooting">
+                        <p>&lt; SYSTEM REBOOTING &gt;</p>
+                        <p class="text--sm">CYBERPUNK APP VER 1.0 SYS RECOVERY</p>
+                        <p class="text--sm">PROCESS: <span class="process-amount">0</span>%</p>
+                        <p class="loading-bar"></p>
+                    </div>
+                    <div class="hydra_reboot_success hidden">
+                        <p>REBOOTING SUCCESSFUL</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-sign" class="content-sign">
+                <div>
+                    <section class="alerts">
+                        <div class="alert status-error">A sad alert here.</div>
+                        <div class="alert status-success">A sad alert here.</div>
+                    </section>
+                    <div class="container">
+                        <div class="container__form container--signup">
+                            <form method="post" action="" class="form" id="form1" autocomplete="new-password">
+                                <h2 class="form__title">Inscrivez vous</h2>
+                                <div class="editor-field editor-field__textbox">
+                                    <div class="editor-field__label-container">
+                                        <label class="editor-field__label">Pseudo</label>
+                                    </div>
+                                    <div class="editor-field__container">
+                                        <input autocomplete="off" id="newPseudo" name="newPseudo" type="text" class="editor-field__input" placeholder="Pseudo" onfocus="generateNoise(this, 'input')" onblur="removeNoise(this, 'input')" />
+                                    </div>
+                                    <span class="editor-field__bottom"></span>
+                                    <div class="editor-field__noise"></div>
+                                </div>
+                                <div class="editor-field editor-field__textbox">
+                                    <div class="editor-field__label-container">
+                                        <label class="editor-field__label">Email</label>
+                                    </div>
+                                    <div class="editor-field__container">
+                                        <input autocomplete="off" id="newEmail" name="newEmail" type="email" class="editor-field__input" placeholder="Email" onfocus="generateNoise(this, 'input')" onblur="removeNoise(this, 'input')" />
+                                    </div>
+                                    <span class="editor-field__bottom"></span>
+                                    <div class="editor-field__noise"></div>
+                                </div>
+                                <div class="editor-field editor-field__textbox">
+                                    <div class="editor-field__label-container">
+                                        <label class="editor-field__label">Mot de passe</label>
+                                    </div>
+                                    <div class="editor-field__container">
+                                        <input autocomplete="off" id="newMotDePasse" name="newMotDePasse" type="password" class="editor-field__input" placeholder="Mot de passe" onfocus="generateNoise(this, 'input')"onblur="removeNoise(this, 'input')" />
+                                    </div>
+                                    <span class="editor-field__bottom"></span>
+                                    <div class="editor-field__noise"></div>
+                                </div>
+                                <div id="inscriptionButton" class="btnCyber btnCyber--primary" onmouseover="generateNoise(this, 'button')"onmouseout="removeNoise(this, 'button')">
+                                    <div class="btnCyber__container">
+                                        S'inscrire
+                                    </div>
+                                    <div class="btnCyber__bottom"></div>
+                                    <div class="btnCyber__noise"></div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="container__form container--signin">
+                            <form autocomplete="off" method="post" action="" class="form" id="form2">
+                                <h2 class="form__title">Connectez vous</h2>
+                                <div class="editor-field editor-field__textbox">
+                                    <div class="editor-field__label-container">
+                                        <label class="editor-field__label">Email</label>
+                                    </div>
+                                    <div class="editor-field__container">
+                                        <input autocomplete="off" id="email" name="email" type="email" class="editor-field__input" placeholder="Email" onfocus="generateNoise(this, 'input')" onblur="removeNoise(this, 'input')" />
+                                    </div>
+                                    <span class="editor-field__bottom"></span>
+                                    <div class="editor-field__noise"></div>
+                                </div>
+                                <div class="editor-field editor-field__textbox">
+                                    <div class="editor-field__label-container">
+                                        <label class="editor-field__label">Mot de passe</label>
+                                    </div>
+                                    <div class="editor-field__container">
+                                        <input autocomplete="off" id="password" name="password" type="password" class="editor-field__input" placeholder="Mot de passe" onfocus="generateNoise(this, 'input')" onblur="removeNoise(this, 'input')" />
+                                    </div>
+                                    <span class="editor-field__bottom"></span>
+                                    <div class="editor-field__noise"></div>
+                                </div>
+                                <div id="connexionButton" class="btnCyber btnCyber--primary" onmouseover="generateNoise(this, 'button')"onmouseout="removeNoise(this, 'button')">
+                                    <div class="btnCyber__container">
+                                        Connexion
+                                    </div>
+                                    <div class="btnCyber__bottom"></div>
+                                    <div class="btnCyber__noise"></div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="container__overlay">
+                            <div class="overlay">
+                                <div class="overlay__panel overlay--left">
+                                    <div id="signIn" style="width:200px;" class="btnCyber btnCyber--primary" onmouseover="generateNoise(this, 'button')"onmouseout="removeNoise(this, 'button')">
+                                        <div style="justify-content:center;" class="btnCyber__container">
+                                            Connectez vous
+                                        </div>
+                                        <div class="btnCyber__bottom"></div>
+                                        <div class="btnCyber__noise"></div>
+                                    </div>
+                                </div>
+                                <div class="overlay__panel overlay--right">
+                                    <div id="signUp" style="width:200px;" class="btnCyber btnCyber--primary" onmouseover="generateNoise(this, 'button')"onmouseout="removeNoise(this, 'button')">
+                                        <div style="justify-content:center;" class="btnCyber__container">
+                                            Inscrivez vous
+                                        </div>
+                                        <div class="btnCyber__bottom"></div>
+                                        <div class="btnCyber__noise"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
