@@ -1,8 +1,8 @@
 
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('extalion_cyberchat', 'extalion', 'xCyctmmLFLZf8@J', {
-    host: 'mysql-extalion.alwaysdata.net',
+const sequelize = new Sequelize('cyberchat', 'root', '', {
+    host: 'localhost',
     dialect: 'mysql'
 });
 
