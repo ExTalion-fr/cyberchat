@@ -1,8 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const router = express.Router();
-const { createServer } = require('node:http');
-const { join } = require('node:path');
+const http = require('http');
 const { Server } = require('socket.io');
 
 // ------ BDD ------
@@ -15,6 +13,7 @@ const { User } = require('./model/user');
 const { Conversation } = require('./model/conversation');
 const { ConversationUser } = require('./model/conversationUser');
 const { ConversationMessage } = require('./model/conversationMessage');
+const { ConversationReaction } = require('./model/conversationReaction');
 
 // Tester la connexion
 
@@ -28,19 +27,16 @@ try {
 // ------ Application ------
 
 const app = express();
-const server = createServer(app);
+const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(bodyParser.json());
-app.use(express.static(join(__dirname, 'public')));
-server.listen(3000, () => {
-    console.log('server running at http://localhost:3000');
-});
+app.use(express.static('public'));
 
 // Routes
 
 app.get('/', (req, res) => {
-    res.sendFile(join(__dirname, 'public/index.html'));
+    res.sendFile('/index.html');
 });
 
 app.post('/login', async (req, res) => {
@@ -105,6 +101,10 @@ app.get('/conversation/messages/:id', async (req, res) => {
     const { id } = req.params;
     try {
         let messages = await ConversationMessage.findAll({ where: { idConversation: id } });
+        for (let message of messages) {
+            let reactions = await ConversationReaction.findAll({ where: { idMessage: message.id } });
+            message.dataValues.reactions = reactions;
+        }
         res.send(messages);
     } catch (err) {
         res.send('error :' + err);
@@ -176,10 +176,47 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', async (conversation, idUser, message) => {
         let newMessage = await ConversationMessage.create({ idConversation: conversation.id, idUser: idUser, message: message });
+        let reactions = await ConversationReaction.findAll({ where: { idMessage: newMessage.id } });
+        newMessage.dataValues.reactions = reactions;
         for (const user of conversation.users) {
             if (currentConnections.find(u => u.id == user.id)) {
                 io.to(currentConnections.find(u => u.id == user.id).socketId).emit('addMessage', newMessage);
             }
         }
     });
+
+    socket.on('deleteMessage', async (conversation, idMessage) => {
+        await ConversationMessage.destroy({ where: { id: idMessage } });
+        for (const user of conversation.users) {
+            if (currentConnections.find(u => u.id == user.id)) {
+                io.to(currentConnections.find(u => u.id == user.id).socketId).emit('deleteMessage', idMessage);
+            }
+        }
+    });
+
+    socket.on('addReaction', async (conversation, currentUser, idMessage, reaction, idReaction) => {
+        console.log(idMessage, currentUser.id, reaction, idReaction);
+        const conversationReaction = await ConversationReaction.findOne({ where: { idMessage: idMessage, idUser: currentUser.id, idReaction: idReaction } });
+        console.log(conversationReaction);
+        if (conversationReaction !== null) {
+            await ConversationReaction.destroy({ where: { id: conversationReaction.id } });
+            for (const user of conversation.users) {
+                if (currentConnections.find(u => u.id == user.id)) {
+                    io.to(currentConnections.find(u => u.id == user.id).socketId).emit('deleteReaction', { idMessage: idMessage, idUser: currentUser.id, idReaction: idReaction, reaction: reaction });
+                }
+            }
+            return;
+        } else {
+            await ConversationReaction.create({ idMessage: idMessage, idUser: currentUser.id, idReaction: idReaction, reaction: reaction });
+            for (const user of conversation.users) {
+                if (currentConnections.find(u => u.id == user.id)) {
+                    io.to(currentConnections.find(u => u.id == user.id).socketId).emit('addReaction', { idMessage: idMessage, idUser: currentUser.id, idReaction: idReaction, reaction: reaction });
+                }
+            }
+        }
+    });
+});
+
+server.listen(4000, () => {
+    console.log('server running at http://localhost:4000');
 });

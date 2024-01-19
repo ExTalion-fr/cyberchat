@@ -149,7 +149,7 @@
                 <header class="app-header" id="app-header-id">
                     <div class="app-header__anchor">
                         <span class="app-header__anchor__text">
-                            Night-City NetWire
+                            Night-City CyberChat
                         </span>
                         <span class="app-header__anchor__text">
                             Bienvenue <span id="current-pseudo"></span>
@@ -159,7 +159,7 @@
                         <ul class="nav">
                             <li class="nav__item__header">
                                 <a class="nav__link">
-                                    <span class="nav__link__element">HOME</span>
+                                    <span class="nav__link__element">ACCUEIL</span>
                                 </a>
                             </li>
                             <li class="nav__item__header">
@@ -169,17 +169,17 @@
                             </li>
                             <li class="nav__item__header">
                                 <a class="nav__link">
-                                    <span class="nav__link__element">SHOP</span>
+                                    <span class="nav__link__element">MAGASIN</span>
                                 </a>
                             </li>
                             <li class="nav__item__header">
                                 <a class="nav__link">
-                                    <span class="nav__link__element">MAP</span>
+                                    <span class="nav__link__element">CARTE</span>
                                 </a>
                             </li>
                             <li class="nav__item__header">
                                 <a class="nav__link">
-                                    <span class="nav__link__element">FILES</span>
+                                    <span class="nav__link__element">FICHERS</span>
                                 </a>
                             </li>
                         </ul>
@@ -211,7 +211,7 @@
                         <form class="form-search">
                             <div class="form-group">
                                 <div class="form-control form-control--with-addon">
-                                    <input name="query" placeholder="Search..." type="text"/>
+                                    <input id="conversation-search" name="query" placeholder="Rechercher..." type="text"/>
                                     <div class="form-control__addon form-control__addon--prefix">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                             <path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"></path>
@@ -296,17 +296,36 @@
                             </div>
                     </div>
                     <div class="app-b">
-                            <div class="pad">
-                                <div class="pad__body">
-                                    <h4 class="text-heading3 undefined">What's this?</h4>
-                                    <p class="text-paragraph1 undefined">
-                                        A <em>fake</em> Slack or Discord type of app inspired by Cyberpunk 2077. This app is static, eg. not implementing much logic.
-                                    </p>
-                                    <p class="text-paragraph1 undefined">
-                                        The goal is: showcasing a start of a UI kit. If you've played the game, you' might be able to pick-up some similarities with the in-game menus.
-                                    </p>
-                                </div>
+                        <div class="pad">
+                            <div class="pad__body">
+                                <h4 class="text-heading3">Qu'est-ce que c'est ?</h4>
+                                <br/>
+                                <p class="text-paragraph1">
+                                    Une <em>fausse</em> application de type Slack ou Discord inspirée de Cyberpunk 2077.
+                                </p>
+                                <br/>
+                                <p class="text-paragraph1">
+                                    L'objectif est de présenter une application de chat avec l'interface de Cyberpunk 2077. Si vous avez joué au jeu, vous pourrez peut-être découvrir certaines similitudes avec les menus du jeu.
+                                </p>
                             </div>
+                        </div>
+                        <div id="statistiques" class="pad hidden">
+                            <div class="pad__body">
+                                <h4 class="text-heading3">Statistiques</h4>
+                                <br/>
+                                <h5 class="text-heading5">Envoi total : <span class="statistique-send-total"></span></h5>
+                                <h5 class="text-heading5">Envoi des autres : <span class="statistique-send-others"></span></h5>
+                                <h5 class="text-heading5">Envoi de moi : <span class="statistique-send-me"></span></h5>
+                            </div>
+                        </div>
+                        <div id="messages-search" class="form-control form-control--with-addon hidden">
+                            <input id="conversation-messages-search" name="query" placeholder="Rechercher..." type="text"/>
+                            <div class="form-control__addon form-control__addon--prefix">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M21.172 24l-7.387-7.387c-1.388.874-3.024 1.387-4.785 1.387-4.971 0-9-4.029-9-9s4.029-9 9-9 9 4.029 9 9c0 1.761-.514 3.398-1.387 4.785l7.387 7.387-2.828 2.828zm-12.172-8c3.859 0 7-3.14 7-7s-3.141-7-7-7-7 3.14-7 7 3.141 7 7 7z"></path>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

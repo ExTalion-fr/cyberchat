@@ -3,8 +3,248 @@ let currentUser = {};
 let currentConversations = [];
 let currentConversation = {};
 let currentConnections = [];
+let currentTarget = null;
 currentSocketId = '';
 let users = [];
+
+class ContextMenu {
+    constructor({ target = null, menuItems = [] }) {
+        this.target = target;
+        this.menuItems = menuItems;
+        this.menuItemsNode = this.getMenuItemsNode();
+        this.isOpened = false;
+        this.contextMenu = null;
+    }
+
+    getTargetNode() {
+        const nodes = document.querySelectorAll(this.target);
+        if (nodes && nodes.length !== 0) {
+            return nodes;
+        } else {
+            console.error(`getTargetNode :: "${this.target}" target not found`);
+            return [];
+        }
+    }
+
+    getMenuItemsNode() {
+        const nodes = [];
+        if (!this.menuItems) {
+            console.error("getMenuItemsNode :: Please enter menu items");
+            return [];
+        }
+        this.menuItems.forEach((data, index) => {
+            const item = this.createItemMarkup(data);
+            item.firstChild.setAttribute(
+                "style",
+                `animation-delay: ${index * 0.08}s`
+            );
+            nodes.push(item);
+        });
+        return nodes;
+    }
+
+    createItemMarkup(data) {
+        const button = document.createElement("BUTTON");
+        const item = document.createElement("LI");
+        button.innerHTML = data.content;
+        button.classList.add("contextMenu-button");
+        item.classList.add("contextMenu-item");
+        if (data.divider) item.setAttribute("data-divider", data.divider);
+        item.appendChild(button);
+        if (data.events && data.events.length !== 0) {
+            Object.entries(data.events).forEach((event) => {
+                const [key, value] = event;
+                button.addEventListener(key, value);
+            });
+        }
+        if (data.submenu) {
+            let subMenuList = [];
+            for (const menu of data.submenu) {
+                const newMenu = this.createItemMarkup(menu);
+                subMenuList.push(newMenu);
+            }
+            const subMenuContainerDiv = document.createElement("DIV");
+            subMenuContainerDiv.classList.add("contextMenu-subMenu");
+            const subMenuContainer = document.createElement("UL");
+            subMenuList.forEach((item) => subMenuContainer.appendChild(item));
+            subMenuContainerDiv.appendChild(subMenuContainer);
+            item.appendChild(subMenuContainerDiv);
+            item.addEventListener("mouseover", () => {
+                subMenuContainerDiv.classList.add("contextMenu-subMenu--active");
+            });
+            item.addEventListener("mouseout", () => {
+                subMenuContainerDiv.classList.remove("contextMenu-subMenu--active");
+            });
+        }
+        return item;
+    }
+
+    renderMenu() {
+        const menuContainer = document.createElement("UL");
+        menuContainer.classList.add("contextMenu");
+        this.menuItemsNode.forEach((item) => menuContainer.appendChild(item));
+        return menuContainer;
+    }
+
+    closeMenu(menu) {
+        if (this.isOpened) {
+            this.isOpened = false;
+            if (menu.querySelector(".contextMenu-subMenu--active") !== null) {
+                menu.querySelector(".contextMenu-subMenu--active").classList.remove('contextMenu-subMenu--active');
+            }
+            menu.remove();
+        }
+    }
+
+    addTarget(target) {
+        let node = document.querySelector(target);
+        node.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            this.isOpened = true;
+
+            currentTarget = target;
+
+            const { clientX, clientY } = e;
+            document.body.appendChild(this.contextMenu);
+    
+            const positionY =
+                clientY + this.contextMenu.scrollHeight >= window.innerHeight
+                ? window.innerHeight - this.contextMenu.scrollHeight - 20
+                : clientY;
+            const positionX =
+                clientX + this.contextMenu.scrollWidth >= window.innerWidth
+                ? window.innerWidth - this.contextMenu.scrollWidth - 20
+                : clientX;
+    
+            this.contextMenu.setAttribute(
+                "style",
+                `--width: ${this.contextMenu.scrollWidth}px;
+                --height: ${this.contextMenu.scrollHeight}px;
+                --top: ${positionY}px;
+                --left: ${positionX}px;`
+            );
+        });
+    }
+
+    init() {
+        this.targetNode = this.getTargetNode();
+
+        this.contextMenu = this.renderMenu();
+        document.addEventListener("click", () => this.closeMenu(this.contextMenu));
+        window.addEventListener("blur", () => this.closeMenu(this.contextMenu));
+
+        this.targetNode.forEach((target) => {
+            target.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                this.isOpened = true;
+
+                currentTarget = target;
+
+                const { clientX, clientY } = e;
+                document.body.appendChild(this.contextMenu);
+        
+                const positionY =
+                    clientY + this.contextMenu.scrollHeight >= window.innerHeight
+                    ? window.innerHeight - this.contextMenu.scrollHeight - 20
+                    : clientY;
+                const positionX =
+                    clientX + this.contextMenu.scrollWidth >= window.innerWidth
+                    ? window.innerWidth - this.contextMenu.scrollWidth - 20
+                    : clientX;
+        
+                this.contextMenu.setAttribute(
+                    "style",
+                    `--width: ${this.contextMenu.scrollWidth}px;
+                    --height: ${this.contextMenu.scrollHeight}px;
+                    --top: ${positionY}px;
+                    --left: ${positionX}px;`
+                );
+            });
+        });
+    }
+}
+
+const copyIcon = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" style="margin-right: 7px" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+const cutIcon = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" style="margin-right: 7px" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>`;
+const pasteIcon = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" style="margin-right: 7px; position: relative; top: -1px" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`;
+const downloadIcon = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" style="margin-right: 7px; position: relative; top: -1px" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+const deleteIcon = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" style="margin-right: 7px" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+const arrowRightIcon = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" style="margin-left: 10px" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M7.82054 20.7313C8.21107 21.1218 8.84423 21.1218 9.23476 20.7313L15.8792 14.0868C17.0505 12.9155 17.0508 11.0167 15.88 9.84497L9.3097 3.26958C8.91918 2.87905 8.28601 2.87905 7.89549 3.26958C7.50497 3.6601 7.50497 4.29327 7.89549 4.68379L14.4675 11.2558C14.8581 11.6464 14.8581 12.2795 14.4675 12.67L7.82054 19.317C7.43002 19.7076 7.43002 20.3407 7.82054 20.7313Z"/></svg>`;
+const emoteIcon = `<svg viewBox="0 0 512 512" width="13" height="13" stroke="currentColor" fill="currentColor" stroke-width="2.5" fill="none" style="margin-right: 7px" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M464 256A208 208 0 1 0 48 256a208 208 0 1 0 416 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm349.5 52.4c18.7-4.4 35.9 12 25.5 28.1C350.4 374.6 306.3 400 255.9 400s-94.5-25.4-119.1-63.5c-10.4-16.1 6.8-32.5 25.5-28.1c28.9 6.8 60.5 10.5 93.6 10.5s64.7-3.7 93.6-10.5zM144.4 208a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm192-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>`
+const menuItems = [
+    {
+        content: `${emoteIcon}Ajouter réaction${arrowRightIcon}`,
+        type: "submenu",
+        submenu: [
+            {
+                content: "😀",
+                events: {
+                    click: () => addReaction('😀', 1)
+                }
+            },
+            {
+                content: "😁",
+                events: {
+                    click: () => addReaction('😁', 2)
+                }
+            },
+            {
+                content: "😅",
+                events: {
+                    click: () => addReaction('😅', 3)
+                }
+            },
+            {
+                content: "😂",
+                events: {
+                    click: () => addReaction('😂', 4)
+                }
+            },
+            {
+                content: "👍",
+                events: {
+                    click: () => addReaction('👍', 5)
+                }
+            },
+            {
+                content: "👏",
+                events: {
+                    click: () => addReaction('👏', 6)
+                }
+            },
+            {
+                content: "👌",
+                events: {
+                    click: () => addReaction('👌', 7)
+                }
+            },
+            {
+                content: "✅",
+                events: {
+                    click: () => addReaction('✅', 8)
+                }
+            },
+            {
+                content: "❌",
+                events: {
+                    click: () => addReaction('❌', 9)
+                }
+            }
+        ]
+    },
+    {
+        content: `${deleteIcon}Supprimer`,
+        divider: "top-bottom", // top, bottom, top-bottom
+        events: {
+            click: () => deleteMessage()
+        }
+    },
+];
+
+const contextMenuHome = new ContextMenu({
+    target: ".message",
+    menuItems
+});
 
 window.addEventListener('DOMContentLoaded', () => {
     if (Cookies.get('username') !== undefined) {
@@ -16,7 +256,11 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     socket.on('addMessage', (message) => {
-        addMessage(message, true);
+        if (message.idConversation == currentConversation.id) {
+            addMessage(message, true);
+        } else if (message.idUser != currentUser.id) {
+            addNotifConversation(message);
+        }
     });
 
     socket.on('newConnected', (response) => {
@@ -32,6 +276,49 @@ window.addEventListener('DOMContentLoaded', () => {
     socket.on('addConversation', (conversation) => {
         currentConversations.push(conversation);
         addConversation(conversation);
+    });
+
+    socket.on('deleteMessage', (idMessage) => {
+        $(`.message[data-id="${idMessage}"]`).remove();
+    });
+
+    socket.on('addReaction', (response) => {
+        let message = $(`.message[data-id="${response.idMessage}"]`);
+        let messageEmoji = message.find('.message__emoji');
+        if (messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).length > 0) {
+            let count = messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).find('.message__emoji-count');
+            count.html(parseInt(count.html()) + 1);
+            if (response.idUser == currentUser.id) {
+                messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).addClass('selected');
+            }
+        } else {
+            let newReaction = `
+            <button class="message__emoji-button ${(response.idUser == currentUser.id ? 'selected' : '')}" data-reaction="${response.reaction}" data-idreaction="${response.idReaction}">
+                <span class="message__emoji-title">${response.reaction}</span>
+                <span class="message__emoji-count">1</span>
+            </button>
+            `;
+            $(`.message[data-id="${response.idMessage}"]`).find('.message__emoji').append(newReaction);
+            $(`.message[data-id="${response.idMessage}"] .message__emoji .message__emoji-button[data-reaction="${response.reaction}"]`).click(function() {
+                socket.emit('addReaction', currentConversation, currentUser, response.idMessage, response.reaction, response.idReaction);
+            });
+        }
+    });
+
+    socket.on('deleteReaction', (response) => {
+        let message = $(`.message[data-id="${response.idMessage}"]`);
+        let messageEmoji = message.find('.message__emoji');
+        if (messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).length > 0) {
+            let count = messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).find('.message__emoji-count');
+            if (parseInt(count.html()) == 1) {
+                messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).remove();
+            } else {
+                count.html(parseInt(count.html()) - 1);
+                if (response.idUser == currentUser.id) {
+                    messageEmoji.find(`.message__emoji-button[data-reaction="${response.reaction}"]`).removeClass('selected');
+                }
+            }
+        }
     });
 
     // Sign
@@ -131,6 +418,8 @@ window.addEventListener('DOMContentLoaded', () => {
     $("#add-author-message").click(function() {
         clearConversation();
 		channelAuthorName.html("Créer une conversation");
+        $('#statistiques').addClass('hidden');
+        $('#messages-search').addClass('hidden');
         $.ajax({
             url: '/userlist',
             type: 'GET',
@@ -173,6 +462,9 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 response.forEach(user => {
+                    if (user.id == currentUser.id) {
+                        return;
+                    }
                     let userDiv = `
                     <div class="author" data-id="${user.id}">
                         <div class="author-body">
@@ -224,7 +516,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 	});
 
-
     const sendButton = $("#sendButton");
     sendButton.click(function(e) {
         e.preventDefault();
@@ -234,8 +525,26 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener("keydown", function(e) {
         if((e.key === "Enter" || e.keyCode === 13) && $("#message").is(":focus")) {
             e.preventDefault();
-            sendMessage();
+            if (e.shiftKey) {
+                $("#message").val($("#message").val() + "\n");
+            } else {
+                sendMessage();
+            }
         }
+    });
+
+    $('#conversation-search').on('input', function() {
+        let value = $(this).val().toLowerCase();
+        $('.nav__item').filter(function() {
+            $(this).toggle($(this).find('.conversation-link__element').text().toLowerCase().indexOf(value) > -1);
+        });
+    });
+
+    $('#conversation-messages-search').on('input', function() {
+        let value = $(this).val().toLowerCase();
+        $('.message').filter(function() {
+            $(this).toggle($(this).find('.message__body div').text().toLowerCase().indexOf(value) > -1);
+        });
     });
 
 });
@@ -580,6 +889,7 @@ function appActive() {
 
 function sendMessage() {
     let message = $('#message').val();
+    message = message.replace(/\n/g, '<br>');
     $('#message').val('');
     socket.emit('sendMessage', currentConversation, currentUser.id, message);
 }
@@ -599,14 +909,16 @@ function addConversation(conversation) {
         } else {
             conversation.online = false;
         }
+    } else {
+        conversation.title = '# ' + conversation.title;
     }
     newConversation = `
     <li class="nav__item" data-id="${conversation.id}" ${(user !== null ? 'data-iduser="' + user.id + '"' : '')})>
         <a href="#" class="nav__link">
-            <span class="conversation-link conversation-link--unread ${(conversation.online !== undefined && conversation.online ? 'conversation-link--online' : '')}">
+            <span class="conversation-link ${(conversation.online !== undefined && conversation.online ? 'conversation-link--online' : '')}">
                 ${(conversation.users.length == 2 ? '<span class="conversation-link__icon"></span>' : '')}
                 <span class="conversation-link__element">${conversation.title}</span>
-                ${(conversation.messages !== undefined && conversation.messages.length > 0 ? '<span class="conversation-link__element"><span class="badge">' + conversation.messages.length + '</span></span>' : '')}
+                <span class="conversation-link__element conversation-link__element__badge"></span>
             </span>
             <svg class="svg-icon-close-conversation" viewBox="0 0 20 20">
                 <path fill="none" d="M15.898,4.045c-0.271-0.272-0.713-0.272-0.986,0l-4.71,4.711L5.493,4.045c-0.272-0.272-0.714-0.272-0.986,0s-0.272,0.714,0,0.986l4.709,4.711l-4.71,4.711c-0.272,0.271-0.272,0.713,0,0.986c0.136,0.136,0.314,0.203,0.492,0.203c0.179,0,0.357-0.067,0.493-0.203l4.711-4.711l4.71,4.711c0.137,0.136,0.314,0.203,0.494,0.203c0.178,0,0.355-0.067,0.492-0.203c0.273-0.273,0.273-0.715,0-0.986l-4.711-4.711l4.711-4.711C16.172,4.759,16.172,4.317,15.898,4.045z"></path>
@@ -632,6 +944,12 @@ function updateConversation(conversation) {
     currentConversation = conversation;
     const channelBody = $("div.channel-feed__body");
 	const channelAuthorName = $("div.segment-topbar span.channel-link__element");
+    $('#statistiques').removeClass('hidden');
+    $('#messages-search').removeClass('hidden');
+    if ($('.nav__item[data-id="' + conversation.id + '"] .conversation-link__element__badge .badge').length > 0) {
+        $('.nav__item[data-id="' + conversation.id + '"] .conversation-link__element__badge .badge').remove();
+        $('.nav__item[data-id="' + conversation.id + '"] .conversation-link').removeClass('conversation-link--unread');
+    }
     channelAuthorName.html(conversation.title);
     channelBody.html("");
     for (const elt of $('.nav__item')) {
@@ -647,10 +965,25 @@ function updateConversation(conversation) {
         contentType: 'application/json',
         success: function (response) {
             currentConversation.messages = response;
+            let stats = {
+                total: 0,
+                others: 0,
+                me: 0
+            };
             for (const message of response) {
+                if (message.idUser == currentUser.id) {
+                    stats.me++;
+                } else {
+                    stats.others++;
+                }
+                stats.total++;
                 addMessage(message);
             }
-            $(".channel-feed__body").animate({ scrollTop: $('.channel-feed__body').prop("scrollHeight") });
+            $('#statistiques .statistique-send-total').html(stats.total);
+            $('#statistiques .statistique-send-others').html(stats.others);
+            $('#statistiques .statistique-send-me').html(stats.me);
+            contextMenuHome.init();
+            $(".channel-feed__body").animate({ scrollTop: $('.channel-feed__body').prop("scrollHeight") }, 0);
         },
         error: function (error) {
             console.error('Erreur AJAX:', error);
@@ -660,20 +993,78 @@ function updateConversation(conversation) {
 
 function addMessage(message, newMessage = false) {
     const channelBody = $("div.channel-feed__body");
+    let reactions = ``;
+    let reactionsList = [];
+    for (const reaction of message.reactions) {
+        if (reactionsList.find(r => r.reaction == reaction.reaction)) {
+            reactionsList.find(r => r.reaction == reaction.reaction).count++;
+            if (reaction.idUser == currentUser.id) {
+                reactionsList.find(r => r.reaction == reaction.reaction).userSelected = true;
+            }
+        } else {
+            reactionsList.push({ reaction: reaction.reaction, count: 1, userSelected: (reaction.idUser == currentUser.id ? true : false) });
+        }
+    }
+    for (const reaction of reactionsList) {
+        reactions += `
+        <button class="message__emoji-button ${(reaction.userSelected ? 'selected' : '')}" data-reaction="${reaction.reaction} data-idreaction="${reaction.idReaction}">
+            <span class="message__emoji-title">${reaction.reaction}</span>
+            <span class="message__emoji-count">${reaction.count}</span>
+        </button>
+        `;
+    }
+
+    // Remplacement des liens par des vidéos embarquées
+
+    // if have link but text too
+    if (message.message.includes('http') && !message.message.includes(' ')) {
+        let youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        let spotifyRegex = /(?:https?:\/\/)?(?:open\.spotify\.com)?(?:track\/([a-zA-Z0-9]+))/;
+        let soundcloudRegex = /https:\/\/soundcloud\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-]+)/;
+        let twitterRegex = /https:\/\/?(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)\/status\/([0-9]+)/;
+        let instagramRegex = /https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)\//;
+        message.message = message.message.replace(youtubeRegex, '<iframe width="100%" height="350" src="https://www.youtube.com/embed/$1" frameborder="0" allowfullscreen></iframe>');
+        message.message = message.message.replace(spotifyRegex, '<iframe src="https://open.spotify.com/embed/track/$1" width="100%" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>');
+        message.message = message.message.replace(soundcloudRegex, '<iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/$1/$2&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>');
+        message.message = message.message.replace(twitterRegex, '<blockquote class="twitter-tweet"><a href="https://twitter.com/$1/status/$2"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>');
+        message.message = message.message.replace(instagramRegex, '<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/$1/" data-instgrm-version="13" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"></blockquote><script async src="https://www.instagram.com/embed.js"></script>');
+        if (message.message.includes('iframe')) {
+            message.message = message.message.substring(message.message.indexOf('<iframe'));
+            message.message = message.message.substring(0, message.message.indexOf('</iframe>') + 9);
+        } else if (message.message.includes('blockquote')) {
+            message.message = message.message.substring(0, message.message.indexOf('</script>') + 9);
+        }
+    }
+
     let messageDiv = `
-    <div class="message ${(message.idUser == currentUser.id ? 'rightMessage' : '')}">
+    <div class="message ${(message.idUser == currentUser.id ? 'rightMessage' : '')} ${(message.message.includes('iframe') || message.message.includes('blockquote') ? 'iframe' : '')}" data-id="${message.id}">
         <div class="message__body">
-            <div>
-                ${message.message}
-            </div>
+            <div>${message.message}</div>
         </div>
         <div class="message__footer">
-            <span class="message__authoring">${currentConversation.users.find(user => user.id == message.idUser).username}</span> - ${formatDate(message.createdAt)}
+            <span class="message__authoring">
+                ${currentConversation.users.find(user => user.id == message.idUser).username}
+            </span> 
+            <span>-</span>
+            <span>${formatDate(message.createdAt)}</span>
+            <div class="message__emoji">
+                ${reactions}
+            </div>
         </div>
     </div>
     `;
     channelBody.append(messageDiv);
+    channelBody.find('.message:last-of-type .message__emoji-button').click(function() {
+        socket.emit('addReaction', currentConversation, currentUser, message.id, $(this).data('reaction'), $(this).data('idreaction'));
+    });
     if (newMessage) {
+        contextMenuHome.addTarget('.message:last-of-type');
+        if (message.idUser == currentUser.id) {
+            $('#statistiques .statistique-send-me').html(parseInt($('#statistiques .statistique-send-me').html()) + 1);
+        } else {
+            $('#statistiques .statistique-send-others').html(parseInt($('#statistiques .statistique-send-others').html()) + 1);
+        }
+        $('#statistiques .statistique-send-total').html(parseInt($('#statistiques .statistique-send-total').html()) + 1);
         $(".channel-feed__body").animate({ scrollTop: $('.channel-feed__body').prop("scrollHeight") });
     }
 }
@@ -753,5 +1144,29 @@ function newDisconnected(user) {
         if ($(elt).data('iduser') == user.id) {
             $(elt).find('.conversation-link').removeClass('conversation-link--online');
         }
+    }
+}
+
+function deleteMessage() {
+    let idMessage = $(currentTarget).data('id');
+    socket.emit('deleteMessage', currentConversation, idMessage);
+}
+
+function addReaction(reaction, idReaction) {
+    let idMessage = $(currentTarget).data('id');
+    socket.emit('addReaction', currentConversation, currentUser, idMessage, reaction, idReaction);
+}
+
+function addNotifConversation(message) {
+    console.log($('.nav__item[data-id="' + message.idConversation + '"] .conversation-link__element__badge .badge'));
+    if ($('.nav__item[data-id="' + message.idConversation + '"] .conversation-link__element__badge .badge').length > 0) {
+        let badge = $('.nav__item[data-id="' + message.idConversation + '"] .conversation-link__element__badge .badge');
+        badge.html(parseInt(badge.html()) + 1);
+    } else {
+        let newBadge = `
+            <span class="badge">1</span>
+        `;
+        $('.nav__item[data-id="' + message.idConversation + '"] .conversation-link__element__badge').append(newBadge);
+        $('.nav__item[data-id="' + message.idConversation + '"] .conversation-link').addClass('conversation-link--unread');
     }
 }
